@@ -386,7 +386,7 @@ class TorchBackend(Backend):
             b_rows = b.size(0)
             b_cols = 1 if len(b.shape) == 1 else b.size(1)
             time = 0
-            C = torch_cuda.cusparse_SpMM_BA(A.rows, A.cols, A.values, b, A.shape[0], A.shape[1])
+            C = torch_cuda.cusparse_SpMV(A.rows, A.cols, A.values, b, A.shape[0], A.shape[1])
             return C
         if isinstance(A, torch.Tensor) and A.is_sparse:
             result = torch.sparse.mm(A, torch.transpose(b, 0, 1))
