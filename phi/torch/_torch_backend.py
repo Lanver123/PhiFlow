@@ -695,7 +695,9 @@ class TorchBackend(Backend):
 
     def conjugate_gradient(self, lin, y, x0, rtol, atol, max_iter, trj: bool) -> SolveResult or List[SolveResult]:
         global total_elapsed
-
+        # TODO: #### REMOVE THIS! ####
+        return Backend.conjugate_gradient(self, lin, y, x0, rtol, atol, max_iter, trj)
+        # TODO: #### REMOVE THIS! ####
         def check_matrix_sparsity(lin: SparseCSRMatrix):
             return print("Matrix is {}% sparse".format(1.0 - len(lin.values) / (lin.shape[0] * lin.shape[1])))
 
