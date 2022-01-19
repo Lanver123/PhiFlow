@@ -10,7 +10,7 @@ import numpy as np
 from . import _ops as math
 from ._ops import choose_backend_t, zeros_like, all_available, print_, reshaped_native, reshaped_tensor, stack, \
     sum_, to_float
-from ._shape import EMPTY_SHAPE, Shape, parse_dim_order, SPATIAL_DIM, vector_add, merge_shapes, spatial, collection, \
+from ._shape import EMPTY_SHAPE, Shape, parse_dim_order, SPATIAL_DIM, vector_add, merge_shapes, spatial, instance, \
     batch, concat_shapes
 from ._tensors import Tensor, NativeTensor, CollapsedTensor, disassemble_tree, TensorLike, assemble_tree, copy_with, \
     disassemble_tensors, assemble_tensors, TensorLikeType, variable_attributes, wrap, cached
@@ -146,7 +146,7 @@ class JitFunction:
 def jit_compile(f: Callable) -> Callable:
     """
     Compiles a graph based on the function `f`.
-    The graph compilation is performed just-in-time (jit) when the returned function is called for the first time.
+    The graph compilation is performed just-in-time (jit), e.g. when the returned function is called for the first time.
 
     The traced function will compute the same result as `f` but may run much faster.
     Some checks may be disabled in the compiled function.
@@ -156,6 +156,14 @@ def jit_compile(f: Callable) -> Callable:
     @math.jit_compile
     def my_function(x: math.Tensor) -> math.Tensor:
     ```
+
+    Invoking the returned function may invoke re-tracing / re-compiling `f` after the first call if either
+
+    * it is called with a different number of arguments,
+    * the keyword arguments differ from previous invocations,
+    * the positional tensor arguments have different dimension names or types (the dimension order also counts),
+    * any positional `Tensor` arguments require a different backend than previous invocations,
+    * `TensorLike` positional arguments do not match in non-variable properties.
 
     Compilation is implemented for the following backends:
 
@@ -619,7 +627,7 @@ class ShiftLinTracer(Tensor):
         # TODO sort indices?
         self._sparse_coo = FixedShiftSparseTensor((out_shape.volume, src_shape.volume),
                                                   set(self.val.keys()), rows, cols,
-                                                  NativeTensor(vals, collection(nnz=len(vals))),
+                                                  NativeTensor(vals, instance(nnz=len(vals))),
                                                   self.dependent_dims)
         return self._sparse_coo
 
@@ -803,13 +811,13 @@ class Solve(Generic[X, Y]):  # TODO move to phi.math._functional, put Tensors th
         assert isinstance(method, str)
         self.method: str = method
         """ Optimization method to use. Available solvers depend on the solve function that is used to perform the solve. """
-        self.relative_tolerance: Tensor = wrap(relative_tolerance)
+        self.relative_tolerance: Tensor = math.to_float(wrap(relative_tolerance))
         """ Relative tolerance for linear solves only. This must be `0` for minimization problems.
         For systems of equations *f(x)=y*, the final tolerance is `max(relative_tolerance * norm(y), absolute_tolerance)`. """
-        self.absolute_tolerance: Tensor = wrap(absolute_tolerance)
+        self.absolute_tolerance: Tensor = math.to_float(wrap(absolute_tolerance))
         """ Absolut tolerance for optimization problems and linear solves.
         For systems of equations *f(x)=y*, the final tolerance is `max(relative_tolerance * norm(y), absolute_tolerance)`. """
-        self.max_iterations: Tensor = wrap(max_iterations)
+        self.max_iterations: Tensor = math.to_int32(wrap(max_iterations))
         """ Maximum number of iterations to perform before raising a `NotConverged` error is raised. """
         self.x0 = x0
         """ Initial guess for the method, of same type and dimensionality as the solve result.
@@ -889,7 +897,7 @@ class SolveInfo(Generic[X, Y]):
             if self.diverged.any:
                 msg = f"Solve diverged within {iterations if iterations is not None else '?'} iterations using {method}."
             elif not self.converged.trajectory[-1].all:
-                msg = f"Solve did not converge to rel={solve.relative_tolerance}, abs={solve.absolute_tolerance} within {solve.max_iterations} iterations using {method}."
+                msg = f"Solve did not converge to rel={solve.relative_tolerance}, abs={solve.absolute_tolerance} within {solve.max_iterations} iterations using {method}. Max residual: {[math.max_(t.trajectory[-1]) for t in disassemble_tree(self.residual)[1]]}"
             else:
                 msg = f"Converged within {iterations if iterations is not None else '?'} iterations."
         self.msg = msg
@@ -1217,9 +1225,9 @@ def _linear_solve_forward(y, solve: Solve, native_lin_op,
     batch_dims = (y_tensor.shape & x0_tensor.shape).without(active_dims)
     x0_native = backend.as_tensor(reshaped_native(x0_tensor, [batch_dims, active_dims], force_expand=True))
     y_native = backend.as_tensor(reshaped_native(y_tensor, [batch_dims, active_dims], force_expand=True))
-    rtol = backend.to_float(reshaped_native(solve.relative_tolerance, [batch_dims], force_expand=True))
-    atol = backend.to_float(reshaped_native(solve.absolute_tolerance, [batch_dims], force_expand=True))
-    maxi = backend.to_int32(reshaped_native(solve.max_iterations, [batch_dims], force_expand=True))
+    rtol = reshaped_native(math.to_float(solve.relative_tolerance), [batch_dims], force_expand=True)
+    atol = reshaped_native(solve.absolute_tolerance, [batch_dims], force_expand=True)
+    maxi = reshaped_native(solve.max_iterations, [batch_dims], force_expand=True)
     trj = _SOLVE_TAPES and any(t.record_trajectories for t in _SOLVE_TAPES)
     if trj:
         assert all_available(y_tensor, x0_tensor), "Cannot record linear solve in jit mode"
