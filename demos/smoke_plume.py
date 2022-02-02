@@ -4,7 +4,7 @@ The simulation computes the resulting air flow in a closed box.
 """
 
 from phi.torch.flow import *
-
+TORCH.set_default_device('GPU')
 
 DOMAIN = dict(x=64, y=64, bounds=Box[0:100, 0:100])
 velocity = StaggeredGrid((0, 0), extrapolation.ZERO, **DOMAIN)  # or use CenteredGrid
