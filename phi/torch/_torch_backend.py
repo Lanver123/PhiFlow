@@ -383,18 +383,15 @@ class TorchBackend(Backend):
 
     def matmul(self, A, b):
         if isinstance(A, SparseCSRMatrix):
-            b_rows = b.size(0)
-            b_cols = 1 if len(b.shape) == 1 else b.size(1)
-            time = 0
-            C = torch_cuda.cusparse_SpMV(A.rows, A.cols, A.values, b, A.shape[0], A.shape[1])
-            return C
-        if isinstance(A, torch.Tensor) and A.is_sparse:
-            result = torch.sparse.mm(A, torch.transpose(b, 0, 1))
-            result = torch.transpose(result, 0, 1)
-            return result
-        if isinstance(A, torch.Tensor) and isinstance(b, torch.Tensor):
-            result = torch.matmul(A, b.T).T
-            return result
+            return torch_cuda.cusparse_SpMM(A.rows, A.cols, A.values, b, A.shape[0], A.shape[1])
+        elif isinstance(A, torch.Tensor):
+            if A.is_sparse:
+                result = torch.sparse.mm(A, torch.transpose(b, 0, 1))
+                result = torch.transpose(result, 0, 1)
+                return result
+            elif isinstance(b, torch.Tensor):
+                result = torch.matmul(A, b.T).T
+                return result
         raise NotImplementedError(type(A), type(b))
 
     def cumsum(self, x, axis: int):
