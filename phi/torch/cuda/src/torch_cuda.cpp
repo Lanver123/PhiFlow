@@ -60,7 +60,7 @@ torch::Tensor floatSpMM(const at::Tensor& dA_csrOffsets,
     CHECK_CUSPARSE( cusparseCreateCsr(&matA, dim_i, dim_j, A_nnz,
                                       dA_csrOffsets.data_ptr<int>(), dA_columns.data_ptr<int>(),
                                       dA_values.data_ptr<float>(),
-                                      CUSPARSE_INDEX_64I, CUSPARSE_INDEX_64I,
+                                      CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I,
                                       CUSPARSE_INDEX_BASE_ZERO, CUDA_R_32F) )
     // Create dense vector X
     CHECK_CUSPARSE( cusparseCreateDnVec(&vecX, dim_j, dB.data_ptr<float>(), CUDA_R_32F) )
@@ -111,7 +111,7 @@ torch::Tensor doubleSpMM(const at::Tensor& dA_csrOffsets,
     CHECK_CUSPARSE( cusparseCreateCsr(&matA, dim_i, dim_j, A_nnz,
                                       dA_csrOffsets.data_ptr<int>(), dA_columns.data_ptr<int>(),
                                       dA_values.data_ptr<double>(),
-                                      CUSPARSE_INDEX_64I, CUSPARSE_INDEX_64I,
+                                      CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I,
                                       CUSPARSE_INDEX_BASE_ZERO, CUDA_R_64F) )
     // Create dense vector X
     CHECK_CUSPARSE( cusparseCreateDnVec(&vecX, dim_j, dB.data_ptr<double>(), CUDA_R_64F) )
