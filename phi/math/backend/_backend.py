@@ -1,5 +1,6 @@
 from collections import namedtuple
 from contextlib import contextmanager
+import time
 from threading import Barrier
 from typing import List, Callable
 
@@ -823,7 +824,11 @@ class Backend:
         if method == 'auto':
             return self.conjugate_gradient_adaptive(lin, y, x0, rtol, atol, max_iter, trj)
         elif method == 'CG':
-            return self.conjugate_gradient(lin, y, x0, rtol, atol, max_iter, trj)
+            start = time.time()
+            result = self.conjugate_gradient(lin, y, x0, rtol, atol, max_iter, trj)
+            end = time.time()
+            print(f'{round(end - start, 3)}')
+            return result
         elif method == 'CG-adaptive':
             return self.conjugate_gradient_adaptive(lin, y, x0, rtol, atol, max_iter, trj)
         else:

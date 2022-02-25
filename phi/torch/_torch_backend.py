@@ -1,4 +1,5 @@
 import numbers
+import time
 import warnings
 from contextlib import contextmanager
 from functools import wraps
@@ -12,7 +13,6 @@ import torch.nn.functional as torchf
 from phi.math import DType
 from phi.math.backend import Backend, NUMPY, ComputeDevice
 from phi.math.backend._backend import combined_dim, SolveResult
-
 
 class TorchBackend(Backend):
 
@@ -613,6 +613,7 @@ class TorchBackend(Backend):
         atol = self.as_tensor(atol)
         max_iter = self.as_tensor(max_iter)
         x, residual, iterations, function_evaluations, converged, diverged = torch_sparse_cg(lin, y, x0, rtol, atol, max_iter)
+
         return SolveResult(f"Φ-Flow CG ({'PyTorch*' if self.is_available(y) else 'TorchScript'})", x, residual, iterations, function_evaluations, converged, diverged, "")
 
     def conjugate_gradient_adaptive(self, lin, y, x0, rtol, atol, max_iter, trj: bool) -> SolveResult or List[SolveResult]:
