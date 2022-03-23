@@ -1,0 +1,107 @@
+BEGIN:VCALENDAR
+METHOD:PUBLISH
+VERSION:2.0
+CALSCALE:GREGORIAN
+X-WR-TIMEZONE:Europe/Vienna
+X-PUBLISHED-TTL:PT1H0M
+PRODID:-//Technische Universität München//DE
+X-WR-CALNAME:Export
+X-WR-CALDESC:Export @ Technische Universität München
+BEGIN:VEVENT
+UID:889130411@tum.de
+DTSTAMP:20220309T121123Z
+STATUS:CONFIRMED
+CLASS:PUBLIC
+URL:https://campus.tum.de/tumonline/wbLv.wbShowLVDetail?pStpSpNr=95062
+ 6772
+SUMMARY:Master-Seminar: Comparison of Word Embedding Approaches for Na
+ tural Language Processing (IN2107) SE\, Standardgruppe
+DESCRIPTION:fix\; Vorbesprechung\; Please use the following link: https:
+ //bbb.rbg.tum.de/cat-ger-ive-d4i
+DTSTART:20220131T120000Z
+DTEND:20220131T123000Z
+LOCATION:Online: Videokonferenz\nZoom etc.
+X-CO-RECURRINGID:
+END:VEVENT
+BEGIN:VEVENT
+UID:889136448@tum.de
+DTSTAMP:20220309T121123Z
+STATUS:CONFIRMED
+CLASS:PUBLIC
+URL:https://campus.tum.de/tumonline/wbLv.wbShowLVDetail?pStpSpNr=95062
+ 6772
+SUMMARY:Master-Seminar: Comparison of Word Embedding Approaches for Na
+ tural Language Processing (IN2107) SE\, Standardgruppe
+DESCRIPTION:fix\; Abhaltung\; Consultation (attendance optional)\; 
+DTSTART:20220509T110000Z
+DTEND:20220509T120000Z
+GEO:48.2622985;11.6697764
+LOCATION:01.13.010\, Seminarraum (5613.01.010)
+X-CO-RECURRINGID:
+END:VEVENT
+BEGIN:VEVENT
+UID:889136449@tum.de
+DTSTAMP:20220309T121123Z
+STATUS:CONFIRMED
+CLASS:PUBLIC
+URL:https://campus.tum.de/tumonline/wbLv.wbShowLVDetail?pStpSpNr=95062
+ 6772
+SUMMARY:Master-Seminar: Comparison of Word Embedding Approaches for Na
+ tural Language Processing (IN2107) SE\, Standardgruppe
+DESCRIPTION:fix\; Abhaltung\; Consultation (attendance optional)\; 
+DTSTART:20220516T110000Z
+DTEND:20220516T120000Z
+GEO:48.2622985;11.6697764
+LOCATION:01.13.010\, Seminarraum (5613.01.010)
+X-CO-RECURRINGID:
+END:VEVENT
+BEGIN:VEVENT
+UID:889136450@tum.de
+DTSTAMP:20220309T121123Z
+STATUS:CONFIRMED
+CLASS:PUBLIC
+URL:https://campus.tum.de/tumonline/wbLv.wbShowLVDetail?pStpSpNr=95062
+ 6772
+SUMMARY:Master-Seminar: Comparison of Word Embedding Approaches for Na
+ tural Language Processing (IN2107) SE\, Standardgruppe
+DESCRIPTION:fix\; Abhaltung\; Student presentations 1/2\; 
+DTSTART:20220523T110000Z
+DTEND:20220523T140000Z
+GEO:48.2622985;11.6697764
+LOCATION:01.13.010\, Seminarraum (5613.01.010)
+X-CO-RECURRINGID:
+END:VEVENT
+BEGIN:VEVENT
+UID:889136451@tum.de
+DTSTAMP:20220309T121123Z
+STATUS:CONFIRMED
+CLASS:PUBLIC
+URL:https://campus.tum.de/tumonline/wbLv.wbShowLVDetail?pStpSpNr=95062
+ 6772
+SUMMARY:Master-Seminar: Comparison of Word Embedding Approaches for Na
+ tural Language Processing (IN2107) SE\, Standardgruppe
+DESCRIPTION:fix\; Abhaltung\; Student presentations 2/2\; 
+DTSTART:20220530T110000Z
+DTEND:20220530T140000Z
+GEO:48.2622985;11.6697764
+LOCATION:01.13.034\, Praktikumsraum (5613.01.034)
+X-CO-RECURRINGID:
+END:VEVENT
+BEGIN:VEVENT
+UID:889136447@tum.de
+DTSTAMP:20220309T121123Z
+STATUS:CONFIRMED
+CLASS:PUBLIC
+URL:https://campus.tum.de/tumonline/wbLv.wbShowLVDetail?pStpSpNr=95062
+ 6772
+SUMMARY:Master-Seminar: Comparison of Word Embedding Approaches for Na
+ tural Language Processing (IN2107) SE\, Standardgruppe
+DESCRIPTION:fix\; Abhaltung\; Introduction to NLP\, Word Embeddings\, Assi
+ gnment of Topics and Instructions\; 
+DTSTART:20220425T110000Z
+DTEND:20220425T130000Z
+GEO:48.2622985;11.6697764
+LOCATION:01.13.010\, Seminarraum (5613.01.010)
+X-CO-RECURRINGID:
+END:VEVENT
+END:VCALENDAR
