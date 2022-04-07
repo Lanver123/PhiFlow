@@ -116,8 +116,8 @@ class CudaCommand(distutils.cmd.Command):
         print(f"Compilation complete. See {logfile_path} for details.")
 
 
-class TorchCuda(distutils.cmd.Command):
-    description = 'Compile PyTorch CUDA library'
+class PhiTorchCuda(distutils.cmd.Command):
+    description = 'Compile Phiflow PyTorch CUDA library'
     user_options = []
 
     def initialize_options(self) -> None:
@@ -126,12 +126,21 @@ class TorchCuda(distutils.cmd.Command):
     def finalize_options(self) -> None:
         pass
 
-    def compile_torch_cuda(self):
-        command = ['python', './phi/torch/cuda/torch_cuda_setup.py', 'install']
+    def rename_library(self) -> None:
+        import glob
+        # Find file using regular expression: /build/lib.*/phi_torch_cuda.*.so
+        lib_file = glob.glob(join(abspath('build'), 'lib.*', 'phi_torch_cuda.*.so'))[0]
+        print(lib_file)
+        assert isfile(lib_file), f"Could not find library file {lib_file}. Setuptools should have created a library file in the /build directory."
+        os.rename(lib_file, abspath('./build/lib/phi_torch_cuda.so'))
+
+    def compile_phi_torch_cuda(self):
+        command = ['python', './phi/torch/cuda/phi_torch_cuda_setup.py', 'install']
         subprocess.check_call(command)
 
     def run(self):
-        self.compile_torch_cuda()
+        self.compile_phi_torch_cuda()
+        self.rename_library()
 
 try:
     with open(join(dirname(__file__), 'docs/Package_Info.md'), 'r') as readme:
@@ -165,7 +174,7 @@ setup(
               'webglviewer'],
     cmdclass={
         'tf_cuda': CudaCommand,
-        'torch_cuda': TorchCuda
+        'phi_torch_cuda': PhiTorchCuda
     },
     description='Differentiable PDE solving framework for machine learning',
     long_description=long_description,

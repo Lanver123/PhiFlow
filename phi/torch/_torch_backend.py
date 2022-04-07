@@ -4,6 +4,7 @@ from collections import namedtuple, Counter
 from contextlib import contextmanager
 from functools import wraps
 from typing import List, Callable
+from wsgiref.simple_server import sys_version
 
 import numpy as np
 import torch
@@ -13,7 +14,13 @@ import torch.nn.functional as torchf
 from phi.math import DType
 from phi.math.backend import Backend, NUMPY, ComputeDevice
 from phi.math.backend._backend import combined_dim, SolveResult
-torch.ops.load_library('../venv/lib/python3.8/site-packages/torch_cuda-0.0.0-py3.8-linux-x86_64.egg/torch_cuda.cpython-38-x86_64-linux-gnu.so')
+
+try:
+    torch.ops.load_library(f'../build/lib/phi_torch_cuda.so')
+except OSError:
+    import sys
+    sys.exit('Could not load PhiFlow\'s custom library PhiFlow/build/lib/phi_torch_cuda.so\nMake sure you have compiled it with: $python PhiFlow/setup.py install phi_torch_cuda')
+
 
 class SparseCSRMatrix:
     def __init__(self, values, row_ptr, col_index, shape):
@@ -392,7 +399,7 @@ class TorchBackend(Backend):
             A.rows.type(torch.int64)
             A.cols.type(torch.int64)
             A.shape.type(torch.int64)
-            C = torch.ops.torch_cuda.cusparse_SpMM_BA(A.rows, A.cols, A.values, b, A.shape[0], A.shape[1])
+            C = torch.ops.phi_torch_cuda.cusparse_SpMM_BA(A.rows, A.cols, A.values, b, A.shape[0], A.shape[1])
             return C
         if isinstance(A, torch.Tensor) and A.is_sparse:
             result = torch.sparse.mm(A, torch.transpose(b, 0, 1))
@@ -711,7 +718,8 @@ class TorchBackend(Backend):
             lin.cols = lin.cols.type(torch.int64)
             lin.rows = lin.rows.type(torch.int64)
             lin.shape = lin.shape.astype(np.int64)
-            res = torch.ops.torch_cuda.conjugate_gradient(lin.values, lin.cols, lin.rows, lin.shape[0], lin.shape[1],
+            print("Running CG, Python perspective")
+            res = torch.ops.phi_torch_cuda.conjugate_gradient(lin.values, lin.cols, lin.rows, lin.shape[0], lin.shape[1],
                                                     lin.values.shape[0], y, x0, rtol, atol, max_iter, trj)
 
             if trj:
