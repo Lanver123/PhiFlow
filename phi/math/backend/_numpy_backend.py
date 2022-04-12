@@ -4,6 +4,7 @@ import sys
 from typing import List, Any, Callable
 
 import numpy as np
+import numpy.random
 import scipy.signal
 import scipy.sparse
 from scipy.sparse import issparse
@@ -47,7 +48,9 @@ class NumPyBackend(Backend):
     sqrt = np.sqrt
     exp = np.exp
     sin = np.sin
+    arcsin = np.arcsin
     cos = np.cos
+    arccos = np.arccos
     tan = np.tan
     log = np.log
     log2 = np.log2
@@ -78,6 +81,9 @@ class NumPyBackend(Backend):
             elif self.dtype(array).kind == complex:
                 array = self.to_complex(array)
         return array
+
+    def is_module(self, obj):
+        return False
 
     def is_tensor(self, x, only_native=False):
         if isinstance(x, np.ndarray) and x.dtype != object:
@@ -120,8 +126,16 @@ class NumPyBackend(Backend):
             result = x / y
         return np.where(y == 0, 0, result)
 
-    def random_uniform(self, shape):
-        return np.random.random(shape).astype(to_numpy_dtype(self.float_type))
+    def random_uniform(self, shape, low, high, dtype: DType or None):
+        dtype = dtype or self.float_type
+        if dtype.kind == float:
+            return np.random.uniform(low, high, shape).astype(to_numpy_dtype(dtype))
+        elif dtype.kind == complex:
+            return (np.random.uniform(low.real, high.real, shape) + 1j * np.random.uniform(low.imag, high.imag, shape)).astype(to_numpy_dtype(dtype))
+        elif dtype.kind == int:
+            return numpy.random.randint(low, high, shape, dtype=to_numpy_dtype(dtype))
+        else:
+            raise ValueError(dtype)
 
     def random_normal(self, shape):
         return np.random.standard_normal(shape).astype(to_numpy_dtype(self.float_type))
@@ -333,7 +347,7 @@ class NumPyBackend(Backend):
         return value
 
     # def functional_gradient(self, f, wrt: tuple or list, get_output: bool):
-    #     warnings.warn("NumPy does not support analytic gradients and will use differences instead. This may be slow!")
+    #     warnings.warn("NumPy does not support analytic gradients and will use differences instead. This may be slow!", RuntimeWarning)
     #     eps = {64: 1e-9, 32: 1e-4, 16: 1e-1}[self.precision]
     #
     #     def gradient(*args, **kwargs):
