@@ -130,7 +130,6 @@ class PhiTorchCuda(distutils.cmd.Command):
         import glob
         # Find file using regular expression: /build/lib.*/phi_torch_cuda.*.so
         lib_file = glob.glob(join(abspath('build'), 'lib.*', 'phi_torch_cuda.*.so'))[0]
-        print(lib_file)
         assert isfile(lib_file), f"Could not find library file {lib_file}. Setuptools should have created a library file in the /build directory."
         os.rename(lib_file, abspath('./build/lib/phi_torch_cuda.so'))
 
