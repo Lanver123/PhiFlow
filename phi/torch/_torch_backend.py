@@ -718,7 +718,6 @@ class TorchBackend(Backend):
             lin.cols = lin.cols.type(torch.int64)
             lin.rows = lin.rows.type(torch.int64)
             lin.shape = lin.shape.astype(np.int64)
-            print("Running CG, Python perspective")
             res = torch.ops.phi_torch_cuda.conjugate_gradient(lin.values, lin.cols, lin.rows, lin.shape[0], lin.shape[1],
                                                     lin.values.shape[0], y, x0, rtol, atol, max_iter, trj)
 
