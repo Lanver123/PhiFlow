@@ -314,8 +314,7 @@ namespace phi_torch_cuda {
         CHECK_CUDA( cudaFree(globalBuffer) )
 
         std::clock_t end = std::clock();
-        auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        printf("%.3f :: %ld ms from Unix epoch\n", double(end - begin) / CLOCKS_PER_SEC, now);
+        std::cout << double(end - begin) / CLOCKS_PER_SEC << std::endl;
 
         return {x, residual, torch::squeeze(iterations, -1), torch::squeeze(function_evaluations, -1),
         torch::squeeze(converged, -1), torch::squeeze(diverged, -1)};
