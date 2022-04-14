@@ -1363,6 +1363,7 @@ def _linear_solve_forward(y, solve: Solve, native_lin_op,
 
 
 def attach_gradient_solve(forward_solve: Callable):
+    return forward_solve
     def implicit_gradient_solve(*args, **kwargs):
         y, solve, *matrix, x, dx = args
         grad_solve = solve.gradient_solve

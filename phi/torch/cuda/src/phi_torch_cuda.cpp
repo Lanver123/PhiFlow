@@ -307,10 +307,6 @@ namespace phi_torch_cuda {
         std::clock_t end = std::clock();
         std::cout << double(end - begin) / CLOCKS_PER_SEC << std::endl;
 
-        // Create result tensor with the following variables: x, residual, iterations, function_evaluations, converged, diverged}
-        std::cout << "Running CG. C++ perspective" << std::endl;
-        std::cout << csr_values.sizes() << " | " << csr_cols.sizes() << " | " << csr_rows.sizes() << " | " << x.sizes() << " | " << y.sizes() << " | " << std::endl;
-        std::cout << torch::sum(csr_values) << " | " << torch::sum(csr_cols) << " | " << torch::sum(csr_rows) << " | " << torch::sum(x) << " | " << torch::sum(y) << " | " << std::endl;
         return {x, residual, torch::squeeze(iterations, -1), torch::squeeze(function_evaluations, -1),
         torch::squeeze(converged, -1), torch::squeeze(diverged, -1)};
     }
