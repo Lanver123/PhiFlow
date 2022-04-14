@@ -40,4 +40,4 @@ for i in viewer.range(max_steps):
     time_0 = time.time()
     smoke, velocity, pressure, iterations = step(smoke, velocity, pressure)
     time_1 = time.time()
-    print(f'{measurement_ID},{i},{round(time_1 - time_0,3)},{iterations},{err_thresh},{max_steps},C++_opt,{JIT},{math_precision},{sim_precision}')
+    print(f'{measurement_ID},{i},{round(time_1 - time_0,3)},{iterations},{err_thresh},{max_steps},C++,{JIT},{math_precision},{sim_precision}')

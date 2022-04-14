@@ -23,7 +23,7 @@ namespace phi_torch_cuda {
     cusparseDnVecDescr_t dC_cusparse;
 
     void allocateBuffer(size_t newSize) {
-        if(newSize > globalBufferSize) {
+        if(1) {
             CHECK_CUDA( cudaFree(globalBuffer) )
             CHECK_CUDA( cudaMalloc(&globalBuffer, newSize) )
             globalBufferSize = newSize;
@@ -37,13 +37,14 @@ namespace phi_torch_cuda {
     }
 
     template<typename T>
-    void print_variable(char* name, T variable) {
+    void print64_t_variable(char* name, T variable) {
         std::cout << name << "\n" << variable << std::endl;
     }
 
     /*
         Function that gets called from cusparse_SpMM() when the real variables are single precision.
     */
+
     torch::Tensor floatSpMM(const at::Tensor& dA_csrOffsets,
                             const at::Tensor& dA_columns,
                             const at::Tensor& dA_values,
@@ -95,9 +96,6 @@ namespace phi_torch_cuda {
         return dC;
     }
 
-    /*
-        Function that gets called from cusparse_SpMM() when the real variables are double precision.
-    */
     torch::Tensor doubleSpMM(const at::Tensor& dA_csrOffsets,
                             const at::Tensor& dA_columns,
                             const at::Tensor& dA_values,
@@ -149,10 +147,6 @@ namespace phi_torch_cuda {
         return dC;
     }
 
-    /*
-        This function gets called from Python. It detects whether the real values are stored in float or double format
-        and calls the appropriate function: doubleSpMM | floatSpMM
-    */
     torch::Tensor cusparse_SpMM(
                             const at::Tensor& dA_csrOffsets,
                             const at::Tensor& dA_columns,
@@ -174,10 +168,6 @@ namespace phi_torch_cuda {
         }
     }
 
-    /*
-        Sparse versus dense matrix multiplication. This routine is called internally from conjugate_gradient()
-        The reason is that this function uses the global variable globalSparseMatrixA to re-use memory.
-    */
     torch::Tensor __cusparse_SpMM(
                             at::Tensor& dB,
                             const int64_t dim_i,
@@ -189,15 +179,18 @@ namespace phi_torch_cuda {
 
         dB = dB.view({dim_j});
 
+        // Create dense vector X
         if(dB.dtype() == torch::kFloat32) {
             float alpha           = 1.0f;
             float beta            = 0.0f;
             CHECK_CUSPARSE( cusparseCreateDnVec(&vecX, dim_j, dB.data_ptr<float>(), CUDA_R_32F) )
+            // allocate an external buffer if needed
             CHECK_CUSPARSE( cusparseSpMV_bufferSize(
                                         globalHandle, CUSPARSE_OPERATION_NON_TRANSPOSE,
                                         &alpha, globalSparseMatrixA, vecX, &beta, dC_cusparse, CUDA_R_32F,
                                         CUSPARSE_CSRMV_ALG2, &bufferSize) )
             allocateBuffer(bufferSize);
+            // execute SpMV
             CHECK_CUSPARSE( cusparseSpMV(globalHandle, CUSPARSE_OPERATION_NON_TRANSPOSE,
                                         &alpha, globalSparseMatrixA, vecX, &beta, dC_cusparse, CUDA_R_32F,
                                         CUSPARSE_CSRMV_ALG2, globalBuffer) )
@@ -206,36 +199,26 @@ namespace phi_torch_cuda {
             double alpha           = 1.0f;
             double beta            = 0.0f;
             CHECK_CUSPARSE( cusparseCreateDnVec(&vecX, dim_j, dB.data_ptr<double>(), CUDA_R_64F) )
+            // allocate an external buffer if needed
             CHECK_CUSPARSE( cusparseSpMV_bufferSize(
                                         globalHandle, CUSPARSE_OPERATION_NON_TRANSPOSE,
                                         &alpha, globalSparseMatrixA, vecX, &beta, dC_cusparse, CUDA_R_64F,
                                         CUSPARSE_CSRMV_ALG2, &bufferSize) )
             allocateBuffer(bufferSize);
+            // execute SpMV
             CHECK_CUSPARSE( cusparseSpMV(globalHandle, CUSPARSE_OPERATION_NON_TRANSPOSE,
                                         &alpha, globalSparseMatrixA, vecX, &beta, dC_cusparse, CUDA_R_64F,
                                         CUSPARSE_CSRMV_ALG2, globalBuffer) )
         }
 
+        // destroy matrix/vector descriptors
         CHECK_CUSPARSE( cusparseDestroyDnVec(vecX) )
         dB = dB.view({1, dim_j});
         dC = dC.view({1, dim_i});
         return dC;
     }
 
-    /*
-        Conjugate gradient solver function
-    */
-    std::vector<at::Tensor> conjugate_gradient(torch::Tensor csr_values, torch::Tensor csr_cols, torch::Tensor csr_rows, int64_t csr_dim0, int64_t csr_dim1, int64_t nnz,
-                            torch::Tensor y, torch::Tensor x, torch::Tensor rtol, torch::Tensor atol, torch::Tensor max_iter, bool trj) {
-
-        if(trj) {
-            std::cout << "Trajectory tracing not supported. Return only final values" << std::endl;
-        }
-        std::clock_t begin = std::clock();
-
-        CHECK_CUSPARSE( cusparseCreate(&globalHandle) )
-
-        // Create sparse matrix A in CSR format
+    torch::Tensor load_C_vector(torch::Tensor csr_values, torch::Tensor csr_cols, torch::Tensor csr_rows, int64_t csr_dim0, int64_t csr_dim1, int64_t nnz, torch::Tensor x) {
         dC = torch::empty({csr_dim0}, x.options());
         if(csr_values.dtype() == torch::kFloat32) {
             CHECK_CUSPARSE( cusparseCreateCsr(&globalSparseMatrixA, csr_dim0, csr_dim1, nnz,
@@ -263,10 +246,22 @@ namespace phi_torch_cuda {
                                             CUSPARSE_INDEX_64I, CUSPARSE_INDEX_64I,
                                             CUSPARSE_INDEX_BASE_ZERO, CUDA_R_64F) )
         }
+        return dC;
+    }
+    std::vector<torch::Tensor> conjugate_gradient(torch::Tensor csr_values, torch::Tensor csr_cols, torch::Tensor csr_rows, int64_t csr_dim0, int64_t csr_dim1, int64_t nnz,
+                            torch::Tensor y, torch::Tensor x, torch::Tensor rtol, torch::Tensor atol, torch::Tensor max_iter, bool trj) {
+        // CREATE HANDLE AND CSR MATRIX REPRESENTATION
+        std::clock_t begin = std::clock();
 
+        CHECK_CUSPARSE( cusparseCreate(&globalHandle) )
+        // Create sparse matrix A in CSR format
+
+        // CREATE HANDLE AND CSR MATRIX REPRESENTATION
+        std::vector<std::vector<torch::Tensor>> trajectory;
         torch::Tensor sum_y = torch::sum(torch::mul(y,y), -1);
         torch::Tensor atol_sq = atol * atol;
         torch::Tensor tolerance_sq = torch::maximum(rtol * rtol * sum_y, atol_sq); // max([ , , ...], [atol*atol])
+        dC = load_C_vector(csr_values, csr_cols, csr_rows, csr_dim0, csr_dim1, nnz, x);
         torch::Tensor lin_x = __cusparse_SpMM(x, csr_dim0, csr_dim1);
         auto residual = y - lin_x;
         auto dx = residual;
@@ -281,10 +276,10 @@ namespace phi_torch_cuda {
         auto not_finished = ~finished;
         auto dummy_ones = torch::ones_like(finished, torch::kCUDA);
 
-
         while(!torch::equal(finished, dummy_ones)) {
             it_counter += 1;
             iterations = iterations + not_finished;
+            dC = load_C_vector(csr_values, csr_cols, csr_rows, csr_dim0, csr_dim1, nnz, x);
             torch::Tensor dy = __cusparse_SpMM(dx, csr_dim0, csr_dim1);
             function_evaluations += not_finished;
             auto dx_dy = torch::sum(residual * dy, -1, TRUE);
@@ -292,6 +287,7 @@ namespace phi_torch_cuda {
             step_size = torch::mul(step_size, not_finished);
             x += (step_size * dx);
             if(it_counter % 50 == 0) {
+                dC = load_C_vector(csr_values, csr_cols, csr_rows, csr_dim0, csr_dim1, nnz, x);
                 residual = y - __cusparse_SpMM(x, csr_dim0, csr_dim1);
                 function_evaluations += 1;
             }
@@ -307,17 +303,15 @@ namespace phi_torch_cuda {
             not_finished = ~finished;
         }
 
-        // CLOSE HANDLE AND CSR MATRIX REPRESENTATION
+        // CLOSE SESSION
         CHECK_CUSPARSE( cusparseDestroySpMat(globalSparseMatrixA) )
         CHECK_CUSPARSE( cusparseDestroy(globalHandle) )
         CHECK_CUSPARSE( cusparseDestroyDnVec(dC_cusparse) )
-        CHECK_CUDA( cudaFree(globalBuffer) )
 
         std::clock_t end = std::clock();
         std::cout << double(end - begin) / CLOCKS_PER_SEC << std::endl;
-
-        return {x, residual, torch::squeeze(iterations, -1), torch::squeeze(function_evaluations, -1),
-        torch::squeeze(converged, -1), torch::squeeze(diverged, -1)};
+        return {x, residual, torch::squeeze(iterations, -1), torch::squeeze(function_evaluations, -1), torch::squeeze(converged, -1),
+                torch::squeeze(diverged, -1)};
     }
 
     /*
