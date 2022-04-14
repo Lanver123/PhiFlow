@@ -7,7 +7,7 @@ from phi.torch.flow import *
 # from phi.jax.flow import *
 TORCH.set_default_device('GPU')
 
-DOMAIN = dict(x=128, y=128, bounds=Box[0:100, 0:100])
+DOMAIN = dict(x=128, y=128, bounds=Box(x=100, y=100))
 
 OBSTACLE_GEOMETRIES = [Box[15 + x * 7:15 + (x + 1) * 7, 41:83] for x in range(1, 10, 2)] + [Box[43:50, 41:48], Box[15:43, 83:90], Box[50:85, 83:90]]
 OBSTACLE = Obstacle(union(OBSTACLE_GEOMETRIES))
